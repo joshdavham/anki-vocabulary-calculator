@@ -3,6 +3,7 @@ from aqt.qt import QAction
 from aqt.utils import showInfo, qconnect
 from anki.utils import strip_html
 from importlib.resources import files
+import importlib.util
 
 import sys, subprocess
 from pathlib import Path
@@ -12,13 +13,12 @@ VENDOR.mkdir(exist_ok=True)
 if str(VENDOR) not in sys.path:
     sys.path.insert(0, str(VENDOR))
 
-try:
-    import spacy
-except Exception:
+if not importlib.util.find_spec("spacy"):
     subprocess.check_call([sys.executable, "-m", "pip", "install", "spacy", "--only-binary=:all:", "--target", str(VENDOR)])
-    import spacy
 
 def count_cards() -> None:
+
+    import spacy
 
     ja_words_txt_path = files(__package__) / "ja_words.txt"
     with open(ja_words_txt_path, "r", encoding="utf-8") as file:
