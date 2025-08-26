@@ -14,11 +14,6 @@ except Exception:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "spacy", "--only-binary=:all:", "--target", str(VENDOR)])
     import spacy
 
-try:
-    nlp = spacy.load("ja_core_news_sm")
-except Exception:
-    from spacy.cli import download
-    download("ja_core_news_sm")
-    nlp = spacy.load("ja_core_news_sm")
-
-
+JA_NLP_MODEL = "ja_core_news_sm"
+if not spacy.util.is_package(JA_NLP_MODEL):
+    spacy.cli.download(JA_NLP_MODEL)    
