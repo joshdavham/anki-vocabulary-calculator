@@ -2,6 +2,7 @@ from aqt import mw
 from aqt.qt import QAction
 from aqt.utils import showInfo, qconnect
 from anki.utils import strip_html
+from importlib.resources import files
 
 import sys, subprocess
 from pathlib import Path
@@ -21,13 +22,19 @@ JA_NLP_MODEL = "ja_core_news_sm"
 if not spacy.util.is_package(JA_NLP_MODEL):
     spacy.cli.download(JA_NLP_MODEL)
 
+from importlib.resources import files
+
+ja_words_txt_path = files(__package__) / "ja_words.txt"
+with open(ja_words_txt_path, "r", encoding="utf-8") as file:
+    JA_WORD_LIST = file.read().splitlines()
+
 def count_cards() -> None:
 
     all_card_ids = mw.col.find_cards("")
 
     nlp = spacy.load(JA_NLP_MODEL)
 
-    word_retrievabilities = {}
+    lemma_retrievabilities = {}
     for card_id in all_card_ids:
 
         card_retrievability = mw.col.card_stats_data(card_id).fsrs_retrievability
@@ -39,14 +46,14 @@ def count_cards() -> None:
 
             lemma = str(token.lemma_)
 
-            if lemma not in word_retrievabilities or word_retrievabilities[lemma] < card_retrievability:
-                word_retrievabilities[lemma] = card_retrievability
+            if lemma in JA_WORD_LIST:
 
-    num_lemmas = int(sum(word_retrievabilities.values()))
+                if lemma not in lemma_retrievabilities or lemma_retrievabilities[lemma] < card_retrievability:
+                    lemma_retrievabilities[lemma] = card_retrievability
 
-    print(word_retrievabilities)
+    num_lemmas = int(sum(lemma_retrievabilities.values()))
 
-    showInfo(f"You know {num_lemmas} lemmas")
+    showInfo(f"You currently know at least {num_lemmas} Japanese base words.")
 
 action = QAction("Anki Vocabulary Calculator")
 qconnect(action.triggered, count_cards)
