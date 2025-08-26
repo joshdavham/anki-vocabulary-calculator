@@ -1,6 +1,7 @@
 from aqt import mw
 from aqt.qt import QAction
 from aqt.utils import showInfo, qconnect
+from anki.utils import strip_html
 
 import sys, subprocess
 from pathlib import Path
@@ -24,15 +25,24 @@ def count_cards() -> None:
 
     all_card_ids = mw.col.find_cards("")
 
-    card_count = 0
+    nlp = spacy.load(JA_NLP_MODEL)
+
+    num_lemmas = 0
     for card_id in all_card_ids:
 
         card_retrievability = mw.col.card_stats_data(card_id).fsrs_retrievability
-        card_count += card_retrievability
 
-    card_count = int(card_count)
+        card_text = strip_html(mw.col.get_card(card_id).question())
+        doc = nlp(card_text)
 
-    showInfo(f"You know {card_count} cards")
+        for token in doc:
+
+            lemma = str(token.lemma_)
+            num_lemmas += 1
+
+    num_lemmas = int(num_lemmas)
+
+    showInfo(f"You know {num_lemmas} lemmas")
 
 action = QAction("Anki Vocabulary Calculator")
 qconnect(action.triggered, count_cards)
