@@ -27,7 +27,7 @@ def count_cards() -> None:
 
     nlp = spacy.load(JA_NLP_MODEL)
 
-    num_lemmas = 0
+    word_retrievabilities = {}
     for card_id in all_card_ids:
 
         card_retrievability = mw.col.card_stats_data(card_id).fsrs_retrievability
@@ -38,9 +38,13 @@ def count_cards() -> None:
         for token in doc:
 
             lemma = str(token.lemma_)
-            num_lemmas += 1
 
-    num_lemmas = int(num_lemmas)
+            if lemma not in word_retrievabilities or word_retrievabilities[lemma] < card_retrievability:
+                word_retrievabilities[lemma] = card_retrievability
+
+    num_lemmas = int(sum(word_retrievabilities.values()))
+
+    print(word_retrievabilities)
 
     showInfo(f"You know {num_lemmas} lemmas")
 
