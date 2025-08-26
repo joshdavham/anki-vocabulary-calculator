@@ -1,4 +1,6 @@
-from aqt.utils import showInfo
+from aqt import mw
+from aqt.qt import QAction
+from aqt.utils import showInfo, qconnect
 
 import sys, subprocess
 from pathlib import Path
@@ -16,4 +18,19 @@ except Exception:
 
 JA_NLP_MODEL = "ja_core_news_sm"
 if not spacy.util.is_package(JA_NLP_MODEL):
-    spacy.cli.download(JA_NLP_MODEL)    
+    spacy.cli.download(JA_NLP_MODEL)
+
+def count_cards() -> None:
+
+    all_card_ids = mw.col.find_cards("")
+
+    card_count = 0
+    for card_id in all_card_ids:
+
+        card_count += 1
+
+    showInfo(f"You have {card_count} cards")
+
+action = QAction("Anki Vocabulary Calculator")
+qconnect(action.triggered, count_cards)
+mw.form.menuTools.addAction(action)
