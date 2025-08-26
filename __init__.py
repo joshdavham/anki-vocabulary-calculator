@@ -27,9 +27,12 @@ def count_cards() -> None:
     card_count = 0
     for card_id in all_card_ids:
 
-        card_count += 1
+        card_retrievability = mw.col.card_stats_data(card_id).fsrs_retrievability
+        card_count += card_retrievability
 
-    showInfo(f"You have {card_count} cards")
+    card_count = int(card_count)
+
+    showInfo(f"You know {card_count} cards")
 
 action = QAction("Anki Vocabulary Calculator")
 qconnect(action.triggered, count_cards)
