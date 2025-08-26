@@ -18,21 +18,18 @@ except Exception:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "spacy", "--only-binary=:all:", "--target", str(VENDOR)])
     import spacy
 
-JA_NLP_MODEL = "ja_core_news_sm"
-if not spacy.util.is_package(JA_NLP_MODEL):
-    spacy.cli.download(JA_NLP_MODEL)
-
-from importlib.resources import files
-
-ja_words_txt_path = files(__package__) / "ja_words.txt"
-with open(ja_words_txt_path, "r", encoding="utf-8") as file:
-    JA_WORD_LIST = file.read().splitlines()
-
 def count_cards() -> None:
 
-    all_card_ids = mw.col.find_cards("")
+    ja_words_txt_path = files(__package__) / "ja_words.txt"
+    with open(ja_words_txt_path, "r", encoding="utf-8") as file:
+        JA_WORD_LIST = file.read().splitlines()
 
+    JA_NLP_MODEL = "ja_core_news_sm"
+    if not spacy.util.is_package(JA_NLP_MODEL):
+        spacy.cli.download(JA_NLP_MODEL)
     nlp = spacy.load(JA_NLP_MODEL)
+
+    all_card_ids = mw.col.find_cards("")
 
     lemma_retrievabilities = {}
     for card_id in all_card_ids:
