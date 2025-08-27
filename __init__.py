@@ -16,16 +16,21 @@ VENDOR.mkdir(exist_ok=True)
 if str(VENDOR) not in sys.path:
     sys.path.insert(0, str(VENDOR))
 
+
 def maybe_prompt_install() -> None:
-
     if not importlib.util.find_spec("spacy"):
-
         tooltip("Installing Anki Vocaulary Calculator... This may take a minute.")
 
         def task() -> Tuple[int, str, str]:
             cmd = [
-                sys.executable, "-m", "pip", "install", "spacy",
-                "--only-binary=:all:", "--target", str(VENDOR),
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "spacy",
+                "--only-binary=:all:",
+                "--target",
+                str(VENDOR),
             ]
 
             process = subprocess.run(cmd, capture_output=True, text=True)
@@ -34,8 +39,10 @@ def maybe_prompt_install() -> None:
         def on_done(future: Future[int, str, str]) -> None:
             returncode, stdout, stderr = future.result()
             if returncode == 0:
-                showInfo(f"Anki Vocabulary Calculator has been successfully installed!\n\n"
-                         f"Go to Tools > Anki Vocabulary Calculator to use it.")
+                showInfo(
+                    f"Anki Vocabulary Calculator has been successfully installed!\n\n"
+                    f"Go to Tools > Anki Vocabulary Calculator to use it."
+                )
             else:
                 showInfo(
                     f"Anki Vocabulary Calculator installation failed.\n\n"
@@ -44,8 +51,8 @@ def maybe_prompt_install() -> None:
 
         mw.taskman.run_in_background(task=task, on_done=on_done)
 
-def count_cards() -> None:
 
+def count_cards() -> None:
     box = QMessageBox(mw)
     box.setIcon(QMessageBox.Icon.Information)
     box.setWindowTitle("Anki Vocabulary Calculator")
@@ -57,13 +64,11 @@ def count_cards() -> None:
     box.exec()
 
     if box.clickedButton() == japanese_button:
-
         tooltip("Calculating vocabulary... Result will display when done.", period=5000)
 
         import spacy
 
         def task() -> int:
-
             ja_words_txt_path = files(__package__) / "ja_words.txt"
             with open(ja_words_txt_path, "r", encoding="utf-8") as file:
                 JA_WORD_LIST = file.read().splitlines()
@@ -77,27 +82,28 @@ def count_cards() -> None:
 
             lemma_retrievabilities = {}
             for card_id in all_card_ids:
-
-                card_retrievability = mw.col.card_stats_data(card_id).fsrs_retrievability
+                card_retrievability = mw.col.card_stats_data(
+                    card_id
+                ).fsrs_retrievability
 
                 card_text = strip_html(mw.col.get_card(card_id).question())
                 doc = nlp(card_text)
 
                 for token in doc:
-
                     lemma = str(token.lemma_)
 
                     if lemma in JA_WORD_LIST:
-
-                        if lemma not in lemma_retrievabilities or lemma_retrievabilities[lemma] < card_retrievability:
+                        if (
+                            lemma not in lemma_retrievabilities
+                            or lemma_retrievabilities[lemma] < card_retrievability
+                        ):
                             lemma_retrievabilities[lemma] = card_retrievability
 
             num_lemmas = int(sum(lemma_retrievabilities.values()))
 
             return num_lemmas
-        
-        def on_done(future: Future[int]):
 
+        def on_done(future: Future[int]):
             num_lemmas = future.result()
 
             showInfo(f"You currently know at least {num_lemmas} Japanese base words.")
