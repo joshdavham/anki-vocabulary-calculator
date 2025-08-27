@@ -44,54 +44,6 @@ def maybe_prompt_install() -> None:
 
         mw.taskman.run_in_background(task=task, on_done=on_done)
 
-def _count_cards() -> None:
-
-    tooltip("Calculating vocabulary... Result will display when done.", period=5000)
-
-    import spacy
-
-    def task() -> int:
-
-        ja_words_txt_path = files(__package__) / "ja_words.txt"
-        with open(ja_words_txt_path, "r", encoding="utf-8") as file:
-            JA_WORD_LIST = file.read().splitlines()
-
-        JA_NLP_MODEL = "ja_core_news_sm"
-        if not spacy.util.is_package(JA_NLP_MODEL):
-            spacy.cli.download(JA_NLP_MODEL)
-        nlp = spacy.load(JA_NLP_MODEL)
-
-        all_card_ids = mw.col.find_cards("")
-
-        lemma_retrievabilities = {}
-        for card_id in all_card_ids:
-
-            card_retrievability = mw.col.card_stats_data(card_id).fsrs_retrievability
-
-            card_text = strip_html(mw.col.get_card(card_id).question())
-            doc = nlp(card_text)
-
-            for token in doc:
-
-                lemma = str(token.lemma_)
-
-                if lemma in JA_WORD_LIST:
-
-                    if lemma not in lemma_retrievabilities or lemma_retrievabilities[lemma] < card_retrievability:
-                        lemma_retrievabilities[lemma] = card_retrievability
-
-        num_lemmas = int(sum(lemma_retrievabilities.values()))
-
-        return num_lemmas
-    
-    def on_done(future: Future[int]):
-
-        num_lemmas = future.result()
-
-        showInfo(f"You currently know at least {num_lemmas} Japanese base words.")
-
-    mw.taskman.run_in_background(task=task, on_done=on_done)
-
 def count_cards() -> None:
 
     box = QMessageBox(mw)
@@ -105,7 +57,52 @@ def count_cards() -> None:
     box.exec()
 
     if box.clickedButton() == japanese_button:
-        _count_cards()
+
+        tooltip("Calculating vocabulary... Result will display when done.", period=5000)
+
+        import spacy
+
+        def task() -> int:
+
+            ja_words_txt_path = files(__package__) / "ja_words.txt"
+            with open(ja_words_txt_path, "r", encoding="utf-8") as file:
+                JA_WORD_LIST = file.read().splitlines()
+
+            JA_NLP_MODEL = "ja_core_news_sm"
+            if not spacy.util.is_package(JA_NLP_MODEL):
+                spacy.cli.download(JA_NLP_MODEL)
+            nlp = spacy.load(JA_NLP_MODEL)
+
+            all_card_ids = mw.col.find_cards("")
+
+            lemma_retrievabilities = {}
+            for card_id in all_card_ids:
+
+                card_retrievability = mw.col.card_stats_data(card_id).fsrs_retrievability
+
+                card_text = strip_html(mw.col.get_card(card_id).question())
+                doc = nlp(card_text)
+
+                for token in doc:
+
+                    lemma = str(token.lemma_)
+
+                    if lemma in JA_WORD_LIST:
+
+                        if lemma not in lemma_retrievabilities or lemma_retrievabilities[lemma] < card_retrievability:
+                            lemma_retrievabilities[lemma] = card_retrievability
+
+            num_lemmas = int(sum(lemma_retrievabilities.values()))
+
+            return num_lemmas
+        
+        def on_done(future: Future[int]):
+
+            num_lemmas = future.result()
+
+            showInfo(f"You currently know at least {num_lemmas} Japanese base words.")
+
+        mw.taskman.run_in_background(task=task, on_done=on_done)
 
 
 action = QAction("Anki Vocabulary Calculator")
