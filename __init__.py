@@ -1,9 +1,12 @@
 from aqt import mw, gui_hooks
 from aqt.qt import QAction, QMessageBox
-from aqt.utils import showInfo, qconnect
+from aqt.utils import showInfo, qconnect, tooltip
 from anki.utils import strip_html
 from importlib.resources import files
 import importlib.util
+import os
+from typing import Tuple
+from concurrent.futures import Future
 
 import sys, subprocess
 from pathlib import Path
@@ -17,15 +20,29 @@ def maybe_prompt_install() -> None:
 
     if not importlib.util.find_spec("spacy"):
 
-        msg = QMessageBox(mw)
-        msg.setText("Anki Vocabulary Calculator needs to install some additional libraries.\n"
-                    "Would you like to complete the installation now?")
-        msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-        msg.setDefaultButton(QMessageBox.StandardButton.Yes)
-        result = msg.exec()
+        tooltip("Installing Anki Vocaulary Calculator... This may take a minute.")
 
-        if result == QMessageBox.StandardButton.Yes:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "spacy", "--only-binary=:all:", "--target", str(VENDOR)])
+        def task() -> Tuple[int, str, str]:
+            cmd = [
+                sys.executable, "-m", "pip", "install", "spacy",
+                "--only-binary=:all:", "--target", str(VENDOR),
+            ]
+
+            process = subprocess.run(cmd, capture_output=True, text=True)
+            return process.returncode, process.stdout, process.stderr
+
+        def on_done(future: Future[int, str, str]) -> None:
+            returncode, stdout, stderr = future.result()
+            if returncode == 0:
+                showInfo(f"Anki Vocabulary Calculator has been successfully installed!\n\n"
+                         f"Go to Tools > Anki Vocabulary Calculator to use it.")
+            else:
+                showInfo(
+                    f"Anki Vocabulary Calculator installation failed.\n\n"
+                    f"Please make sure you're connected to the internet for installation."
+                )
+
+        mw.taskman.run_in_background(task=task, on_done=on_done)
 
 def count_cards() -> None:
 
