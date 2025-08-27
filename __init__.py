@@ -1,5 +1,5 @@
-from aqt import mw
-from aqt.qt import QAction
+from aqt import mw, gui_hooks
+from aqt.qt import QAction, QMessageBox
 from aqt.utils import showInfo, qconnect
 from anki.utils import strip_html
 from importlib.resources import files
@@ -13,8 +13,19 @@ VENDOR.mkdir(exist_ok=True)
 if str(VENDOR) not in sys.path:
     sys.path.insert(0, str(VENDOR))
 
-if not importlib.util.find_spec("spacy"):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "spacy", "--only-binary=:all:", "--target", str(VENDOR)])
+def maybe_prompt_install() -> None:
+
+    if not importlib.util.find_spec("spacy"):
+
+        msg = QMessageBox(mw)
+        msg.setText("Anki Vocabulary Calculator needs to install some additional libraries.\n"
+                    "Would you like to complete the installation now?")
+        msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg.setDefaultButton(QMessageBox.StandardButton.Yes)
+        result = msg.exec()
+
+        if result == QMessageBox.StandardButton.Yes:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "spacy", "--only-binary=:all:", "--target", str(VENDOR)])
 
 def count_cards() -> None:
 
@@ -55,3 +66,5 @@ def count_cards() -> None:
 action = QAction("Anki Vocabulary Calculator")
 qconnect(action.triggered, count_cards)
 mw.form.menuTools.addAction(action)
+
+gui_hooks.profile_did_open.append(maybe_prompt_install)
