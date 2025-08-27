@@ -44,21 +44,13 @@ def maybe_prompt_install() -> None:
 
         mw.taskman.run_in_background(task=task, on_done=on_done)
 
-def count_cards() -> None:
+def _count_cards() -> None:
 
-    box = QMessageBox(mw)
-    box.setIcon(QMessageBox.Icon.Information)
-    box.setWindowTitle("Anki Vocabulary Calculator")
-    box.setText("Which language would you like to calculate?")
-    # box.setDetailedText("Some detailed text")
-    japanese_button = box.addButton("Japanese 🇯🇵", QMessageBox.ButtonRole.AcceptRole)
-    cancel_button = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
-    box.setDefaultButton(japanese_button)
-    box.exec()
+    tooltip("Calculating vocabulary... Result will display when done.", period=5000)
 
-    if box.clickedButton() == japanese_button:
+    import spacy
 
-        import spacy
+    def task() -> int:
 
         ja_words_txt_path = files(__package__) / "ja_words.txt"
         with open(ja_words_txt_path, "r", encoding="utf-8") as file:
@@ -90,7 +82,31 @@ def count_cards() -> None:
 
         num_lemmas = int(sum(lemma_retrievabilities.values()))
 
+        return num_lemmas
+    
+    def on_done(future: Future[int]):
+
+        num_lemmas = future.result()
+
         showInfo(f"You currently know at least {num_lemmas} Japanese base words.")
+
+    mw.taskman.run_in_background(task=task, on_done=on_done)
+
+def count_cards() -> None:
+
+    box = QMessageBox(mw)
+    box.setIcon(QMessageBox.Icon.Information)
+    box.setWindowTitle("Anki Vocabulary Calculator")
+    box.setText("Which language would you like to calculate?")
+    # box.setDetailedText("Some detailed text")
+    japanese_button = box.addButton("Japanese 🇯🇵", QMessageBox.ButtonRole.AcceptRole)
+    cancel_button = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+    box.setDefaultButton(japanese_button)
+    box.exec()
+
+    if box.clickedButton() == japanese_button:
+        _count_cards()
+
 
 action = QAction("Anki Vocabulary Calculator")
 qconnect(action.triggered, count_cards)
