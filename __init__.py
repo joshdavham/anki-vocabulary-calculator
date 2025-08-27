@@ -4,11 +4,11 @@ from aqt.utils import showInfo, qconnect, tooltip
 from anki.utils import strip_html
 from importlib.resources import files
 import importlib.util
-import os
 from typing import Tuple
 from concurrent.futures import Future
 
-import sys, subprocess
+import sys
+import subprocess
 from pathlib import Path
 
 VENDOR = Path(__file__).parent / "vendor"
@@ -40,13 +40,13 @@ def maybe_prompt_install() -> None:
             returncode, stdout, stderr = future.result()
             if returncode == 0:
                 showInfo(
-                    f"Anki Vocabulary Calculator has been successfully installed!\n\n"
-                    f"Go to Tools > Anki Vocabulary Calculator to use it."
+                    "Anki Vocabulary Calculator has been successfully installed!\n\n"
+                    "Go to Tools > Anki Vocabulary Calculator to use it."
                 )
             else:
                 showInfo(
-                    f"Anki Vocabulary Calculator installation failed.\n\n"
-                    f"Please make sure you're connected to the internet for installation."
+                    "Anki Vocabulary Calculator installation failed.\n\n"
+                    "Please make sure you're connected to the internet for installation."
                 )
 
         mw.taskman.run_in_background(task=task, on_done=on_done)
@@ -59,7 +59,7 @@ def count_cards() -> None:
     box.setText("Which language would you like to calculate?")
     # box.setDetailedText("Some detailed text")
     japanese_button = box.addButton("Japanese 🇯🇵", QMessageBox.ButtonRole.AcceptRole)
-    cancel_button = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+    _ = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
     box.setDefaultButton(japanese_button)
     box.exec()
 
