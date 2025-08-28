@@ -82,7 +82,7 @@ def count_cards() -> None:
     box.exec()
 
     if box.clickedButton() == calculate_button:
-        tooltip("Calculating vocabulary... Result will display when done.", period=5000)
+        tooltip("Calculating vocabulary... Result will display when done.", period=7000)
 
         import spacy
 
@@ -127,7 +127,7 @@ def count_cards() -> None:
             box = QMessageBox(mw)
             box.setIconPixmap(QPixmap(str(Path(__file__).parent / "anki_vocabulary_calculator_icon.png")))
             box.setWindowTitle("Anki Vocabulary Calculator")
-            box.setText(f"You currently know at least\n\n{num_lemmas}\n\nJapanese base words")
+            box.setText(f"You currently know at least...\n\n{num_lemmas}\n\nJapanese base words!")
             confirm_button = box.addButton("Okay", QMessageBox.ButtonRole.AcceptRole)
             box.setDefaultButton(confirm_button)
             box.exec()
