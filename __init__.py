@@ -39,6 +39,11 @@ def maybe_prompt_install() -> None:
         def on_done(future: Future[int, str, str]) -> None:
             returncode, stdout, stderr = future.result()
             if returncode == 0:
+
+                action = QAction("Anki Vocabulary Calculator", mw)
+                qconnect(action.triggered, count_cards)
+                mw.form.menuTools.addAction(action)
+
                 showInfo(
                     "Anki Vocabulary Calculator has been successfully installed!\n\n"
                     "Go to Tools > Anki Vocabulary Calculator to use it."
@@ -50,6 +55,12 @@ def maybe_prompt_install() -> None:
                 )
 
         mw.taskman.run_in_background(task=task, on_done=on_done)
+
+    else:
+
+        action = QAction("Anki Vocabulary Calculator", mw)
+        qconnect(action.triggered, count_cards)
+        mw.form.menuTools.addAction(action)
 
 
 def count_cards() -> None:
@@ -110,9 +121,5 @@ def count_cards() -> None:
 
         mw.taskman.run_in_background(task=task, on_done=on_done)
 
-
-action = QAction("Anki Vocabulary Calculator")
-qconnect(action.triggered, count_cards)
-mw.form.menuTools.addAction(action)
 
 gui_hooks.profile_did_open.append(maybe_prompt_install)
