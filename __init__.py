@@ -1,6 +1,6 @@
 from aqt import mw, gui_hooks
-from aqt.qt import QAction, QMessageBox
-from aqt.utils import showInfo, qconnect, tooltip
+from aqt.qt import QAction, QMessageBox, QPixmap
+from aqt.utils import qconnect, tooltip
 from anki.utils import strip_html
 from importlib.resources import files
 import importlib.util
@@ -44,15 +44,23 @@ def maybe_prompt_install() -> None:
                 qconnect(action.triggered, count_cards)
                 mw.form.menuTools.addAction(action)
 
-                showInfo(
-                    "Anki Vocabulary Calculator has been successfully installed!\n\n"
-                    "Go to Tools > Anki Vocabulary Calculator to use it."
-                )
+                box = QMessageBox(mw)
+                box.setIconPixmap(QPixmap(str(Path(__file__).parent / "anki_vocabulary_calculator_icon.png")))
+                box.setWindowTitle("Anki Vocabulary Calculator")
+                box.setText("Anki Vocabulary Calculator successfully installed!\n\nTools > Anki Vocabulary Calculator")
+                confirm_button = box.addButton("Okay", QMessageBox.ButtonRole.AcceptRole)
+                box.setDefaultButton(confirm_button)
+                box.exec()
+
             else:
-                showInfo(
-                    "Anki Vocabulary Calculator installation failed.\n\n"
-                    "Please make sure you're connected to the internet for installation."
-                )
+
+                box = QMessageBox(mw)
+                box.setIconPixmap(QPixmap(str(Path(__file__).parent / "anki_vocabulary_calculator_icon.png")))
+                box.setWindowTitle("Anki Vocabulary Calculator")
+                box.setText("Anki Vocabulary Calculator installation failed.\n\nPlease make sure you're connected to the internet for installation.")
+                confirm_button = box.addButton("Okay", QMessageBox.ButtonRole.AcceptRole)
+                box.setDefaultButton(confirm_button)
+                box.exec()
 
         mw.taskman.run_in_background(task=task, on_done=on_done)
 
@@ -65,16 +73,15 @@ def maybe_prompt_install() -> None:
 
 def count_cards() -> None:
     box = QMessageBox(mw)
-    box.setIcon(QMessageBox.Icon.Information)
+    box.setIconPixmap(QPixmap(str(Path(__file__).parent / "anki_vocabulary_calculator_icon.png")))
     box.setWindowTitle("Anki Vocabulary Calculator")
-    box.setText("Which language would you like to calculate?")
-    # box.setDetailedText("Some detailed text")
-    japanese_button = box.addButton("Japanese 🇯🇵", QMessageBox.ButtonRole.AcceptRole)
+    box.setText("Calculate Japanese vocabulary size?")
+    calculate_button = box.addButton("Calculate!", QMessageBox.ButtonRole.AcceptRole)
     _ = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
-    box.setDefaultButton(japanese_button)
+    box.setDefaultButton(calculate_button)
     box.exec()
 
-    if box.clickedButton() == japanese_button:
+    if box.clickedButton() == calculate_button:
         tooltip("Calculating vocabulary... Result will display when done.", period=5000)
 
         import spacy
@@ -117,7 +124,13 @@ def count_cards() -> None:
         def on_done(future: Future[int]):
             num_lemmas = future.result()
 
-            showInfo(f"You currently know at least {num_lemmas} Japanese base words.")
+            box = QMessageBox(mw)
+            box.setIconPixmap(QPixmap(str(Path(__file__).parent / "anki_vocabulary_calculator_icon.png")))
+            box.setWindowTitle("Anki Vocabulary Calculator")
+            box.setText(f"You currently know at least\n\n{num_lemmas}\n\nJapanese base words")
+            confirm_button = box.addButton("Okay", QMessageBox.ButtonRole.AcceptRole)
+            box.setDefaultButton(confirm_button)
+            box.exec()
 
         mw.taskman.run_in_background(task=task, on_done=on_done)
 
